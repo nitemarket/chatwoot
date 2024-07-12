@@ -56,6 +56,28 @@ class Integrations::Csml::ProcessorService < Integrations::BotProcessorService
     }
   end
 
+  def message_content(message)
+    content = super(message)
+
+    return content if content.present?
+
+    message_attachments(message)
+  end
+
+  def message_attachments(message)
+    return unless message.attachments.present?
+
+    # gps
+    if message.attachments.first[:file_type].to_sym == :location
+      return message.attachments.map do |attachment|
+               "#{attachment[:coordinates_lat]}, #{attachment[:coordinates_long]}"
+             end.join('\n')
+    end
+
+    # file
+    message.attachments.map(&:file_url).join('\n')
+  end
+
   def process_response(message, response)
     csml_messages = response['messages']
     has_conversation_ended = response['conversation_end']
