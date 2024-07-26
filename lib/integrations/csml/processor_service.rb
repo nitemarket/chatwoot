@@ -59,9 +59,9 @@ class Integrations::Csml::ProcessorService < Integrations::BotProcessorService
   def message_content(message)
     content = super(message)
 
-    return content if content.present?
+    attachment = message_attachments(message)
 
-    message_attachments(message)
+    return "#{content}\n#{attachment}"
   end
 
   def message_attachments(message)
