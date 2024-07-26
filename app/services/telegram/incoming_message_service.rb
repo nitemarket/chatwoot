@@ -12,6 +12,7 @@ class Telegram::IncomingMessageService
 
     set_contact
     update_contact_avatar
+    update_contact_phone_number
     set_conversation
     @message = @conversation.messages.build(
       content: telegram_params_message_content,
@@ -51,6 +52,14 @@ class Telegram::IncomingMessageService
 
     avatar_url = inbox.channel.get_telegram_profile_image(telegram_params_from_id)
     ::Avatar::AvatarFromUrlJob.perform_later(@contact, avatar_url) if avatar_url
+  end
+
+  def update_contact_phone_number
+    return unless vcard
+
+    if telegram_params_from_id == vcard[:user_id]
+      @contact.phone_number = format_phone_number(vcard[:phone_number])
+    end
   end
 
   def conversation_params
@@ -171,5 +180,10 @@ class Telegram::IncomingMessageService
 
   def visual_media_params
     params[:message][:photo].presence&.last || params.dig(:message, :sticker, :thumb).presence || params[:message][:video].presence
+  end
+
+  def format_phone_number(phone_number)
+    # TelephoneNumber.parse(phone_number).e164_number (can't use without country code)
+    phone_number.start_with?('+') ? phone_number : "+#{phone_number}"
   end
 end

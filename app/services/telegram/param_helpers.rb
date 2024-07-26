@@ -58,7 +58,6 @@ module Telegram::ParamHelpers
   end
 
   def telegram_params_message_content
-    Rails.logger.info "LOGGG: #{params[:message]}"
     if callback_query_params?
       params[:callback_query][:data]
     else
