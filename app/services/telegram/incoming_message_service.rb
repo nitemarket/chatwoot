@@ -57,9 +57,6 @@ class Telegram::IncomingMessageService
   def update_contact_phone_number
     return if @contact.phone_number.present?
     return unless vcard
-
-    Rails.logger.info 'UPDATEEEEE phone number'
-
     return unless telegram_params_from_id == vcard[:user_id]
 
     formatted_phone_number = format_phone_number(vcard[:phone_number])
