@@ -55,11 +55,19 @@ class Telegram::IncomingMessageService
   end
 
   def update_contact_phone_number
+    return if @contact.phone_number.present?
     return unless vcard
+    return unless telegram_params_from_id == vcard[:user_id]
 
-    if telegram_params_from_id == vcard[:user_id]
-      @contact.phone_number = format_phone_number(vcard[:phone_number])
-    end
+    formatted_phone_number = format_phone_number(vcard[:phone_number])
+    @contact.phone_number = formatted_phone_number
+
+    @contact = ContactIdentifyAction.new(
+      contact: @contact,
+      params: { phone_number: formatted_phone_number },
+      retain_original_contact_name: true,
+      discard_invalid_attrs: true
+    ).perform
   end
 
   def conversation_params

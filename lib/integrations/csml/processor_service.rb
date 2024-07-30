@@ -61,7 +61,9 @@ class Integrations::Csml::ProcessorService < Integrations::BotProcessorService
 
     attachment = message_attachments(message)
 
-    return "#{content}\n#{attachment}"
+    return attachment if content.blank?
+
+    "#{content}#{attachment ? "\n#{attachment}" : ''}"
   end
 
   def message_attachments(message)
@@ -73,6 +75,9 @@ class Integrations::Csml::ProcessorService < Integrations::BotProcessorService
                "#{attachment[:coordinates_lat]}, #{attachment[:coordinates_long]}"
              end.join('\n')
     end
+
+    # contact
+    return message.attachments.first[:fallback_title] if message.attachments.first[:file_type].to_sym == :contact
 
     # file
     message.attachments.map(&:file_url).join('\n')
