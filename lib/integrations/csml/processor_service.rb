@@ -56,6 +56,33 @@ class Integrations::Csml::ProcessorService < Integrations::BotProcessorService
     }
   end
 
+  def message_content(message)
+    content = super(message)
+
+    attachment = message_attachments(message)
+
+    return attachment if content.blank?
+
+    "#{content}#{attachment ? "\n#{attachment}" : ''}"
+  end
+
+  def message_attachments(message)
+    return unless message.attachments.present?
+
+    # gps
+    if message.attachments.first[:file_type].to_sym == :location
+      return message.attachments.map do |attachment|
+               "#{attachment[:coordinates_lat]}, #{attachment[:coordinates_long]}"
+             end.join('\n')
+    end
+
+    # contact
+    return message.attachments.first[:fallback_title] if message.attachments.first[:file_type].to_sym == :contact
+
+    # file
+    message.attachments.map(&:file_url).join('\n')
+  end
+
   def process_response(message, response)
     csml_messages = response['messages']
     has_conversation_ended = response['conversation_end']
@@ -67,6 +94,7 @@ class Integrations::Csml::ProcessorService < Integrations::BotProcessorService
     # We do not support wait, typing now.
     csml_messages.each do |csml_message|
       create_messages(csml_message, conversation)
+      sleep 1
     end
   end
 
